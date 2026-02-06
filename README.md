@@ -66,78 +66,69 @@ sequenceDiagram
     Contract(Soroban)->>Frontend: Returns Updated Score
 ```
 
-## ⚙️ Local Setup Instructions
+## 🚀 Quick Start (Mock Mode)
+*No Blockchain tools required! Perfect for testing the UI and Database.*
+
+1.  **Backend**:
+    ```bash
+    cd server
+    npm install
+    npx prisma generate
+    npx prisma db push
+    npm run dev
+    ```
+2.  **Frontend**:
+    ```bash
+    cd client
+    npm install
+    npm run dev
+    ```
+3.  **Open** `http://localhost:3000`.
+    *   *Note: If you haven't deployed the contract, the app automatically switches to "Mock Mode", simulating transactions so you can test the full flow.*
+
+## ⚙️ Full Setup (With Blockchain)
 
 ### Prerequisites
 - Node.js (v18+)
-- Rust & Cargo (for compiling contracts)
-- [Soroban CLI](https://soroban.stellar.org/docs/getting-started/setup)
+- [Soroban CLI](https://soroban.stellar.org/docs/getting-started/setup) & Rust (Only for Contract Deployment)
 - [Freighter Wallet Extension](https://www.freighter.app/)
 
 ### 1. Smart Contract Deployment
-*Note: You must deploy the contract to Testnet to get a Contract ID.*
+*Skip this if you just want to test the Web2 features.*
 
-1.  Navigate to the contract directory:
-    ```bash
-    cd contracts/reputation
-    ```
-2.  Build the contract:
+1.  Navigate to `contracts/reputation`.
+2.  Build & Deploy:
     ```bash
     soroban contract build
+    soroban contract deploy --wasm target/wasm32-unknown-unknown/release/reputation_contract.wasm --source alice --network testnet
     ```
-3.  Deploy to Testnet:
+3.  **Copy the Contract ID** (starts with `C...`).
+4.  Create `client/.env.local`:
     ```bash
-    # Ensure you have a configured identity
-    soroban config identity generate alice
-    
-    # Deploy
-    soroban contract deploy \
-      --wasm target/wasm32-unknown-unknown/release/reputation_contract.wasm \
-      --source alice \
-      --network testnet
+    NEXT_PUBLIC_CONTRACT_ID=C...
     ```
-4.  **Copy the Contract ID** output (e.g., `CD...`).
 
 ### 2. Backend Setup
-1.  Navigate to the server directory:
-    ```bash
-    cd server
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Setup Environment Variables & Database:
-    *`.env` is already configured for local dev (SQLite).*
-    ```bash
-    npx prisma generate
-    npx prisma db push
-    ```
-4.  Start the Server:
-    ```bash
-    npm run dev
-    ```
-    *Server running at `http://localhost:3001`*
+1.  `cd server`
+2.  `npm install`
+3.  `npx prisma generate` (Fixes DB client issues)
+4.  `npx prisma db push` (Syncs DB schema)
+5.  `npm run dev`
 
 ### 3. Frontend Setup
-1.  Navigate to the client directory:
-    ```bash
-    cd client
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Configure Contract ID:
-    Create a `.env.local` file in the `client` directory:
-    ```bash
-    echo "NEXT_PUBLIC_CONTRACT_ID=[YOUR_COPIED_CONTRACT_ID]" > .env.local
-    ```
-4.  Start the Client:
-    ```bash
-    npm run dev
-    ```
-    *Client running at `http://localhost:3000`*
+1.  `cd client`
+2.  `npm install`
+3.  `npm run dev`
+
+## 🔧 Troubleshooting
+
+### "500 Internal Server Error" on Wallet Connect
+- **Cause**: Database client out of sync.
+- **Fix**: Run `npx prisma generate` in the `server` folder and restart.
+
+### "Contract ID not set"
+- **Cause**: You haven't deployed the contract.
+- **Fix**: The app should auto-switch to Mock Mode. If not, check the console logs.
 
 ## 📖 Usage Guide
 
