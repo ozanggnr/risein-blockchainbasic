@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { Horizon } from '@stellar/stellar-sdk';
+import { prisma } from '../db';
 
 // Use same server instance as wallet controller
 const server = new Horizon.Server('https://horizon-testnet.stellar.org');

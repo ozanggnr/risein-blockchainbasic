@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../db';
 
 // This service essentially abstracts the "storage" of reputation.
 // In Phase 2, this file can be modified to write to the blockchain instead of the SQL DB.

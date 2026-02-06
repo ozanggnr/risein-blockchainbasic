@@ -1,9 +1,8 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { PrismaClient } from '@prisma/client';
 import { Horizon } from '@stellar/stellar-sdk';
+import { prisma } from '../db';
 
-const prisma = new PrismaClient();
 const server = new Horizon.Server('https://horizon-testnet.stellar.org');
 
 export const connectWallet = async (req: AuthRequest, res: Response) => {
@@ -12,11 +11,17 @@ export const connectWallet = async (req: AuthRequest, res: Response) => {
         const { publicKey } = req.body;
 
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-        if (!publicKey) return res.status(400).json({ error: 'Public key required' });
+
+        // Ensure publicKey is a string (handle potential object from Freighter)
+        const address = typeof publicKey === 'object' ? publicKey.publicKey || publicKey.address : publicKey;
+
+        if (!address || typeof address !== 'string') {
+            return res.status(400).json({ error: 'Invalid public key format' });
+        }
 
         // Check if wallet is already linked to another user
         const existingUser = await prisma.user.findUnique({
-            where: { stellarAddress: publicKey },
+            where: { stellarAddress: address },
         });
 
         if (existingUser && existingUser.id !== userId) {
@@ -25,11 +30,12 @@ export const connectWallet = async (req: AuthRequest, res: Response) => {
 
         const user = await prisma.user.update({
             where: { id: userId },
-            data: { stellarAddress: publicKey },
+            data: { stellarAddress: address },
         });
 
         res.json({ success: true, stellarAddress: user.stellarAddress });
     } catch (error) {
+        console.error('Connect Wallet Error Details:', JSON.stringify(error, null, 2));
         res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -46,6 +52,7 @@ export const getWalletStatus = async (req: AuthRequest, res: Response) => {
 
         res.json({ stellarAddress: user?.stellarAddress });
     } catch (error) {
+        console.error('Get Wallet Status Error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
